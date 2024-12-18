@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>引流图片生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #1d1d1f;
+        }
+
+        .container {
+            display: flex;
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .left-panel, .preview, .right-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .left-panel {
+            flex: 1;
+            padding: 24px;
+        }
+
+        .preview {
+            flex: 2;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-panel {
+            flex: 1;
+            padding: 24px;
+        }
+
+        h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #0071e3;
+        }
+
+        .left-panel h2 {
+            font-size: 28px;
+            background: linear-gradient(45deg, #0071e3, #40a9ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        p {
+            color: #666666;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.03);
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .feature-icon {
+            width: 36px;
+            height: 36px;
+            margin-right: 12px;
+            background: #fff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .feature-item h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #000000;
+        }
+
+        .feature-item p {
+            font-size: 13px;
+            margin: 0;
+            color: #666666;
+        }
+
+        .canvas-container {
+            width: 100%;
+            height: 600px;
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: 12px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        button:first-child {
+            background: #0062cc;
+            color: white;
+        }
+
+        button:first-child:hover {
+            background: #0056b3;
+        }
+
+        button.secondary {
+            background: #e2e2e7;
+            color: #000000;
+        }
+
+        button.secondary:hover {
+            background: #d1d1d6;
+        }
+
+        .config-item {
+            margin-bottom: 20px;
+        }
+
+        .config-item > label {
+            display: block;
+            margin-bottom: 8px;
+            color: #000000;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        select, input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+            color: #333333;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #0071e3;
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-item input[type="checkbox"]:checked {
+            background: #0062cc;
+            border-color: #0062cc;
+        }
+
+        .checkbox-item input[type="checkbox"]:checked::after {
+            content: "✓";
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+        }
+
+        .checkbox-item label {
+            font-size: 14px;
+            color: #333333;
+            cursor: pointer;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: #e8e8ed;
+            border-radius: 2px;
+            appearance: none;
+            -webkit-appearance: none;
+            margin: 10px 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #0071e3;
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type="color"] {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 8px;
+        }
+
+        .text-config input[type="text"] {
+            margin-bottom: 8px;
+        }
+
+        .config-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .config-row label {
+            margin: 0;
+            color: #333333;
+        }
+
+        .text-transform-options {
+            margin-top: 16px;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .text-transform-options label {
+            color: #1d1d1f;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .text-transform-options .checkbox-group {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .transform-strength-container {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 12px;
+        }
+
+        .transform-strength-container .config-row {
+            margin-bottom: 8px;
+        }
+
+        .transform-strength-value {
+            font-size: 12px;
+            color: #666666;
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* 修改文字配置区域的样式 */
+        .text-config {
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 8px;
+        }
+
+        .text-options {
+            margin-top: 16px;
+        }
+
+        .text-transform-options {
+            margin-top: 16px;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .text-transform-options label {
+            color: #1d1d1f;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .text-transform-options .checkbox-group {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .transform-strength-container {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 12px;
+        }
+
+        .transform-strength-container .config-row {
+            margin-bottom: 8px;
+        }
+
+        .transform-strength-value {
+            font-size: 12px;
+            color: #666666;
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        /* 优化滑块样式 */
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: #e8e8ed;
+            border-radius: 2px;
+            appearance: none;
+            -webkit-appearance: none;
+            margin: 10px 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #0071e3;
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 优化数字输入框样式 */
+        input[type="number"] {
+            width: 70px;
+            padding: 6px 10px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+            -moz-appearance: textfield;
+        }
+
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* 添加分隔线 */
+        .config-divider {
+            height: 1px;
+            background: rgba(0, 0, 0, 0.06);
+            margin: 16px 0;
+        }
+
+        .warning-box {
+            margin-top: 24px;
+            padding: 16px;
+            background: rgba(255, 149, 0, 0.08);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 149, 0, 0.2);
+        }
+
+        .warning-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 8px;
+        }
+
+        .warning-icon {
+            font-size: 18px;
+        }
+
+        .warning-title {
+            font-weight: 600;
+            color: #e85d00;
+            font-size: 16px;
+        }
+
+        .warning-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .warning-list li {
+            position: relative;
+            padding-left: 16px;
+            margin-bottom: 10px;
+            color: #666666;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .warning-list li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #e85d00;
+        }
+
+        .warning-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        /* 更新复选框和标签的样式 */
+        .checkbox-item {
+            display: flex;
+            align-items: center; /* 确保垂直居中对齐 */
+            gap: 8px;
+            height: 24px; /* 固定高度确保一致性 */
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px; /* 稍微调小一点复选框 */
+            height: 18px;
+            margin: 0; /* 移除默认边距 */
+            border-radius: 6px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            flex-shrink: 0; /* 防止复选框被压缩 */
+        }
+
+        .checkbox-item input[type="checkbox"]:checked {
+            background: #0062cc;
+            border-color: #0062cc;
+        }
+
+        .checkbox-item input[type="checkbox"]:checked::after {
+            content: "✓";
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+        }
+
+        .checkbox-item label {
+            font-size: 14px;
+            color: #333333;
+            cursor: pointer;
+            line-height: 18px; /* 与复选框高度一致 */
+            display: flex;
+            align-items: center;
+            margin: 0; /* 移除默认边距 */
+            padding: 0; /* 移除默认内边距 */
+        }
+
+        .text-transform-options .checkbox-group {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            align-items: center; /* 确保网格中的项目垂直居中 */
+        }
+
+        /* 统一的容器样式 */
+        .text-style-options,
+        .text-transform-options,
+        .transform-strength-container,
+        .style-config {
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        /* 文字样式容器 */
+        .style-container {
+            margin-top: 12px;
+        }
+
+        /* 标签样式统一 */
+        .text-style-options > label,
+        .text-transform-options > label,
+        .style-config > label {
+            display: block;
+            color: #1d1d1f;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        /* 样式配置容器 */
+        .style-config .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        /* 配置行样式化 */
+        .config-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .config-row:last-child {
+            margin-bottom: 0;
+        }
+
+        /* 输入框样式统一 */
+        input[type="number"],
+        input[type="color"] {
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus,
+        input[type="color"]:focus {
+            border-color: #0071e3;
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+        }
+
+        /* 颜色选择器容器样式 */
+        .color-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 统一配置项标签样式 */
+        .config-item > label,
+        .text-style-options > label,
+        .text-transform-options > label,
+        .style-config > label {
+            display: block;
+            color: #000000;
+            font-size: 16px;  /* 增大字体大小 */
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        /* 统一配置行标签样式 */
+        .config-row label {
+            color: #333333;
+            font-size: 14px;  /* 保持和他配置项一致 */
+            font-weight: 500;
+        }
+
+        /* 更新复选框标签样式 */
+        .checkbox-item label {
+            font-size: 14px;  /* 保持和其他配置项一致 */
+            color: #333333;
+            cursor: pointer;
+            line-height: 18px;
+            display: flex;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 更新变形强度标签样式 */
+        .transform-strength-container .config-row label {
+            font-size: 14px;  /* 保持和其他配置项一致 */
+            color: #333333;
+            font-weight: 500;
+        }
+
+        /* 更新强度值的样式 */
+        .transform-strength-value {
+            font-size: 14px;  /* 增大字体大小，与其他配置项一致 */
+            color: #666666;
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        .theme-config {
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .theme-config select {
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .color-picker {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .color-picker label {
+            font-size: 14px;
+            color: #333333;
+        }
+
+        .color-picker input[type="color"] {
+            width: 40px;
+            height: 40px;
+            padding: 2px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .author-info {
+            margin-top: 16px;
+            text-align: right;
+            color: #86868b;
+            font-size: 13px;
+            font-weight: 500;
+            padding-right: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+        }
+
+        .author-name {
+            color: #0071e3;
+            font-weight: 600;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .author-name:hover {
+            color: #0077ed;
+            transform: translateY(-1px);
+        }
+
+        .author-emoji {
+            display: inline-block;
+            animation: float 2s ease-in-out infinite;
+            margin-left: 4px;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-3px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <h2>引流图片生成器</h2>
+            <p>专业的社交媒体引流图片生成工具，支持小红书、抖音、快手等平台。</p>
+            
+            <div class="feature-item">
+                <div class="feature-icon">⚡</div>
+                <div>
+                    <h3>一键生成</h3>
+                    <p>快速生成专业引流图片</p>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                <div class="feature-icon">🔒</div>
+                <div>
+                    <h3>安全合规</h3>
+                    <p>采用特殊算法，确保片安全性</p>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                <div class="feature-icon">🎯</div>
+                <div>
+                    <h3>多平台适配</h3>
+                    <p>支持主流社交平台，一键适配多种规格</p>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <div class="warning-header">
+                    <span class="warning-icon">⚠️</span>
+                    <span class="warning-title">特别提醒</span>
+                </div>
+                <ul class="warning-list">
+                    <li>建议使用小号，定期更换引流文案和样式，避免被平台识别为违规内容</li>
+                    <li>请合理使用工具，遵守平台规则，避免账号风险</li>
+                    <li>引流效果会随着平台政策调整而变化，请及时关注平台规则更新</li>
+                    <li>建议搭配其他引流方式，不要过度依赖单一渠道</li>
+                </ul>
+            </div>
+
+            <div class="author-info">
+                Created by <span class="author-name">斜杠土木er</span> <span class="author-emoji">🚀</span>
+            </div>
+        </div>
+
+        <div class="preview">
+            <h2>实预览</h2>
+            <div class="canvas-container" id="previewCanvas">
+                <canvas id="canvas" width="800" height="400"></canvas>
+            </div>
+            <div class="button-group">
+                <button onclick="regenerateImage()">重新生成</button>
+                <button class="secondary" onclick="saveImage()">保存图片</button>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <h2>配置选项</h2>
+            <div class="config-item">
+                <label>主题色</label>
+                <div class="theme-config">
+                    <select id="themeColor" onchange="handleThemeChange()">
+                        <option value="solid">单色背景</option>
+                        <option value="gradient">渐变背景</option>
+                    </select>
+                    <div class="color-picker" id="solidColorPicker">
+                        <label>背景颜色</label>
+                        <input type="color" id="backgroundColor" value="#f0f6ff" onchange="regenerateImage()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <label>字体样式</label>
+                <select id="fontStyle">
+                    <option value="default">默认</option>
+                    <option value="bold">粗体</option>
+                </select>
+            </div>
+
+            <div class="config-item">
+                <label>图片尺寸</label>
+                <select id="imageSize" onchange="updateCanvasSize()">
+                    <option value="default">默认尺寸</option>
+                    <option value="1:1">1:1 方形</option>
+                    <option value="3:4">3:4 竖图</option>
+                </select>
+            </div>
+
+            <div class="config-item">
+                <label>文字配置</label>
+                <div class="text-config">
+                    <input type="text" id="mainText" placeholder="主要文字" value="微信号示例">
+                    <input type="text" id="subText" placeholder="副标文字" value="+++我V">
+                    
+                    <div class="text-style-options">
+                        <label>文字样式</label>
+                        <div class="style-container">
+                            <div class="config-row">
+                                <label>文字大小</label>
+                                <input type="number" id="fontSize" value="50" min="12" max="72">
+                            </div>
+                            <div class="config-row">
+                                <label>文字颜色</label>
+                                <input type="color" id="textColor" value="#333333">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-transform-options">
+                        <label>文字变形</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="randomRotate" checked>
+                                <label for="randomRotate">随机旋转</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="randomSize" checked>
+                                <label for="randomSize">随机大小</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="transform-strength-container">
+                        <div class="config-row">
+                            <label>变形强度</label>
+                            <span class="transform-strength-value" id="strengthValue">7</span>
+                        </div>
+                        <input type="range" 
+                               id="transformStrength" 
+                               min="1" 
+                               max="10" 
+                               value="7" 
+                               oninput="document.getElementById('strengthValue').textContent = this.value">
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <label>样式配置</label>
+                <div class="style-config">
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="showLines" checked>
+                            <label for="showLines">干扰线</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="showEmoji" checked>
+                            <label for="showEmoji">随机Emoji</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="showStars" checked>
+                            <label for="showStars">随机图形</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        function regenerateImage() {
+            // 清空画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 获取主题色设置
+            const themeType = document.getElementById('themeColor').value;
+            
+            // 根据主题色设置绘制背景
+            if(themeType === 'gradient') {
+                // 创建渐变
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                gradient.addColorStop(0, '#e0eafc');
+                gradient.addColorStop(1, '#cfdef3');
+                ctx.fillStyle = gradient;
+            } else {
+                // 使用选择的单色背景
+                const backgroundColor = document.getElementById('backgroundColor').value;
+                ctx.fillStyle = backgroundColor;
+            }
+            
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 如果选中了干扰线
+            if(document.getElementById('showLines').checked) {
+                drawLines();
+            }
+
+            // 如果选中了Emoji
+            if(document.getElementById('showEmoji').checked) {
+                drawEmojis();
+            }
+
+            // 如选中了随机图形
+            if(document.getElementById('showStars').checked) {
+                drawShapes();
+            }
+
+            // 绘制文本
+            drawText();
+        }
+
+        function drawLines() {
+            const baseFontSize = parseInt(document.getElementById('fontSize').value);
+            const scaleFactor = baseFontSize / 30;
+            
+            for(let i = 0; i < 50; i++) {
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+                ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+                
+                const hue = Math.random() * 360;
+                const saturation = 50 + Math.random() * 50;
+                const lightness = 50 + Math.random() * 30;
+                ctx.strokeStyle = `hsla(${hue}, ${saturation}%, ${lightness}%, ${Math.random() * 0.3})`;
+                
+                ctx.lineWidth = Math.random() * 3 * scaleFactor;
+                ctx.stroke();
+            }
+        }
+
+        function drawEmojis() {
+            const baseFontSize = parseInt(document.getElementById('fontSize').value);
+            const scaleFactor = baseFontSize / 30;
+            
+            const emojis = ['🌟', '💫', '✨', '🌙', '⭐', '🎈', '��', '🎭', '🎪', '🎯', '🎲', '🎮', '🎸', '🌈', '💝'];
+            
+            for(let i = 0; i < 30; i++) {
+                const emojiSize = (12 + Math.random() * 20) * scaleFactor;
+                ctx.font = `${emojiSize}px Arial`;
+                const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+                
+                ctx.save();
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                ctx.translate(x, y);
+                ctx.rotate(Math.random() * Math.PI * 2);
+                ctx.fillText(emoji, 0, 0);
+                ctx.restore();
+            }
+        }
+
+        function drawShapes() {
+            const baseFontSize = parseInt(document.getElementById('fontSize').value);
+            const scaleFactor = baseFontSize / 30;
+            
+            for(let i = 0; i < 200; i++) {
+                ctx.beginPath();
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = (5 + Math.random() * 15) * scaleFactor;
+                
+                const shapeType = Math.floor(Math.random() * 5);
+                
+                const hue = Math.random() * 360;
+                const saturation = 50 + Math.random() * 50;
+                const lightness = 40 + Math.random() * 40;
+                ctx.fillStyle = `hsla(${hue}, ${saturation}%, ${lightness}%, ${0.3 + Math.random() * 0.4})`;
+                ctx.strokeStyle = `hsla(${hue}, ${saturation}%, ${lightness}%, ${0.4 + Math.random() * 0.4})`;
+                
+                switch(shapeType) {
+                    case 0:
+                        ctx.fillRect(x - size/2, y - size/2, size, size);
+                        break;
+                    case 1:
+                        ctx.arc(x, y, size/2, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                    case 2:
+                        drawTriangle(x, y, size);
+                        break;
+                    case 3:
+                        drawDiamond(x, y, size);
+                        break;
+                    case 4:
+                        drawCross(x, y, size);
+                        break;
+                }
+            }
+        }
+
+        // 绘制三角形的辅助函数
+        function drawTriangle(x, y, size) {
+            ctx.beginPath();
+            ctx.moveTo(x, y - size/2);
+            ctx.lineTo(x - size/2, y + size/2);
+            ctx.lineTo(x + size/2, y + size/2);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // 绘制菱形的辅助函数
+        function drawDiamond(x, y, size) {
+            ctx.beginPath();
+            ctx.moveTo(x, y - size/2);
+            ctx.lineTo(x + size/2, y);
+            ctx.lineTo(x, y + size/2);
+            ctx.lineTo(x - size/2, y);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // 绘制十字形的助函数
+        function drawCross(x, y, size) {
+            const thickness = size/3;
+            ctx.fillRect(x - thickness/2, y - size/2, thickness, size); // 垂直线
+            ctx.fillRect(x - size/2, y - thickness/2, size, thickness); // 水平线
+        }
+
+        function drawText() {
+            const mainText = document.getElementById('mainText').value;
+            const subText = document.getElementById('subText').value;
+            const baseFontSize = parseInt(document.getElementById('fontSize').value);
+            const textColor = document.getElementById('textColor').value;
+            const strength = document.getElementById('transformStrength').value / 10; // 将1-10转换为0.1-1.0
+            
+            // 获取变形选项
+            const useRotate = document.getElementById('randomRotate').checked;
+            const useRandomSize = document.getElementById('randomSize').checked;
+            
+            ctx.textAlign = 'center';
+            ctx.fillStyle = textColor;
+            
+            // 绘制主文本
+            drawTransformedText(mainText, canvas.width/2, canvas.height/2, baseFontSize, strength, useRotate, useRandomSize);
+            
+            // 绘制副文本
+            drawTransformedText(subText, canvas.width/2, canvas.height/2 + baseFontSize * 1.5, baseFontSize, strength, useRotate, useRandomSize);
+        }
+
+        function drawTransformedText(text, centerX, centerY, baseFontSize, strength, useRotate, useRandomSize) {
+            const chars = text.split('');
+            let totalWidth = 0;
+            const charWidths = [];
+            
+            // 第一遍计算总宽度
+            chars.forEach(char => {
+                let charFontSize = baseFontSize;
+                if (useRandomSize) {
+                    charFontSize = baseFontSize * (1 + (Math.random() - 0.5) * strength);
+                }
+                ctx.font = `${charFontSize}px Arial`;
+                const metrics = ctx.measureText(char);
+                const charWidth = metrics.width;
+                charWidths.push({ width: charWidth, fontSize: charFontSize });
+                totalWidth += charWidth;
+            });
+            
+            // 起始x坐标，使文本真正居中
+            let x = centerX - totalWidth / 2;
+            
+            // 绘制每个字符
+            chars.forEach((char, i) => {
+                ctx.save();
+                
+                const charFontSize = charWidths[i].fontSize;
+                ctx.font = `${charFontSize}px Arial`;
+                
+                if (useRotate) {
+                    ctx.translate(x + charWidths[i].width / 2, centerY);
+                    ctx.rotate((Math.random() - 0.5) * strength * Math.PI / 2);
+                    ctx.fillText(char, -charWidths[i].width / 2, 0);
+                } else {
+                    ctx.fillText(char, x, centerY);
+                }
+                
+                ctx.restore();
+                x += charWidths[i].width;
+            });
+        }
+
+        function saveImage() {
+            const link = document.createElement('a');
+            link.download = '引流图片.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        // 初始化时生成一次图片
+        regenerateImage();
+
+        // 添加更新画布尺寸的函数
+        function updateCanvasSize() {
+            const canvas = document.getElementById('canvas');
+            const container = document.querySelector('.canvas-container');
+            const sizeOption = document.getElementById('imageSize').value;
+            
+            // 获取容器的实际可用空间
+            const containerWidth = container.clientWidth - 40; // 减去padding
+            const containerHeight = container.clientHeight - 40; // 减去padding
+            
+            // 基础尺寸
+            let baseWidth = 800;
+            let baseHeight;
+            
+            // 根据选项设置画布比例
+            switch(sizeOption) {
+                case '1:1':
+                    baseHeight = baseWidth;
+                    break;
+                case '3:4':
+                    baseHeight = Math.floor(baseWidth * 4/3);
+                    break;
+                default:
+                    baseHeight = 400;
+            }
+            
+            // 计算缩放比例，确保画布完全适应容器
+            const scaleWidth = containerWidth / baseWidth;
+            const scaleHeight = containerHeight / baseHeight;
+            const scale = Math.min(scaleWidth, scaleHeight);
+            
+            // 设置画布实际尺寸（用于导出）
+            canvas.width = baseWidth;
+            canvas.height = baseHeight;
+            
+            // 设置画布显示尺寸
+            canvas.style.width = `${baseWidth * scale}px`;
+            canvas.style.height = `${baseHeight * scale}px`;
+            
+            // 重新生成图片
+            regenerateImage();
+        }
+
+        // 添加窗口整事件监听
+        window.addEventListener('resize', updateCanvasSize);
+
+        // 修改初始化逻辑，确保页面加载完成后更新画布尺寸
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCanvasSize();
+        });
+
+        // 添加主题切换处理函数
+        function handleThemeChange() {
+            const themeType = document.getElementById('themeColor').value;
+            const colorPicker = document.getElementById('solidColorPicker');
+            
+            // 显示/隐藏颜色选择器
+            if (themeType === 'solid') {
+                colorPicker.style.display = 'flex';
+            } else {
+                colorPicker.style.display = 'none';
+            }
+            
+            regenerateImage();
+        }
+
+        // 页面加载时初始化主题设置
+        document.addEventListener('DOMContentLoaded', () => {
+            handleThemeChange();
+        });
+    </script>
+</body>
+</html> 
